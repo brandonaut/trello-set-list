@@ -7,7 +7,6 @@ extern crate serde;
 
 use clap::App;
 
-use serde_json::{Value};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io;
@@ -65,7 +64,7 @@ fn main() {
 
 fn get_set_list_from_json(json: &str) -> Result<Vec<String>, io::Error> {
     let data: TrelloBoard = serde_json::from_str(json)?;
-    let set_list_id = get_set_list_id(&data, "Songs")?;
+    let set_list_id = get_set_list_id(&data, "Set List")?;
 
     let set_list = get_card_names_on_list(&data, &set_list_id)?;
 
@@ -75,46 +74,41 @@ fn get_set_list_from_json(json: &str) -> Result<Vec<String>, io::Error> {
 fn get_card_names_on_list(board_data: &TrelloBoard, list_id: &str) -> Result<Vec<String>, io::Error> {
     let mut cards_on_list = vec![];
 
-    match board_data.cards {
-        Value::Array(ref cards) => {
-            for card in cards {
-                // TODO: Filter out archived cards "closed"
-                if card["idList"].as_str().unwrap() == list_id {
-                    cards_on_list.push(card["name"].as_str().unwrap().to_string());
-                }
-            }
-        },
-        _ => return Err(io::Error::new(io::ErrorKind::NotFound, "'lists' was the wrong JSON type. Expected array."))
+    for card in board_data.cards.iter() {
+        if card.idList == list_id {
+            cards_on_list.push(card.name.to_string());
+        }
     }
 
     Ok(cards_on_list)
 }
 
-fn get_set_list_id(board_data: &TrelloBoard, set_list_name: &str) -> Result<String, io::Error> {
-    match board_data.lists {
-        Value::Array(ref lists) => {
-            for list in lists {
-                match list {
-                    &Value::Object(ref list_data) => {
-                        let list_name = list_data["name"].as_str().unwrap();
-                        println!("   {}", list_name);
-                        if list_name == set_list_name {
-                            let id = list_data["id"].as_str().unwrap().to_string();
-                            println!("Found set list: {}", id);
-                            return Ok(id);
-                        }
-                    }
-                    _ => continue
-                }
-            }
-        },
-        _ => return Err(io::Error::new(io::ErrorKind::NotFound, "'lists' was the wrong JSON type. Expected array."))
+fn get_set_list_id(board: &TrelloBoard, set_list_name: &str) -> Result<String, io::Error> {
+    println!("Lists:");
+    for list in board.lists.iter() {
+        println!("   {}", list.name);
+        if list.name == set_list_name {
+            return Ok(list.id.to_string());
+        }
     }
     Err(io::Error::new(io::ErrorKind::NotFound, "Couldn't find 'lists'"))
 }
 
 #[derive(Serialize, Deserialize)]
 struct TrelloBoard {
-    cards: Value,
-    lists: Value,
+    cards: Vec<Card>,
+    lists: Vec<List>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct List {
+    id: String,
+    name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Card {
+    closed: bool,
+    idList: String,
+    name: String,
 }
