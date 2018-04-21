@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 extern crate clap;
+
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
@@ -11,6 +12,24 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io;
 
+#[derive(Serialize, Deserialize)]
+struct TrelloBoard {
+    cards: Vec<Card>,
+    lists: Vec<List>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct List {
+    id: String,
+    name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Card {
+    closed: bool,
+    idList: String,
+    name: String,
+}
 
 fn main() { 
     App::new("trello-set-list")
@@ -92,23 +111,4 @@ fn get_set_list_id(board: &TrelloBoard, set_list_name: &str) -> Result<String, i
         }
     }
     Err(io::Error::new(io::ErrorKind::NotFound, "Couldn't find 'lists'"))
-}
-
-#[derive(Serialize, Deserialize)]
-struct TrelloBoard {
-    cards: Vec<Card>,
-    lists: Vec<List>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct List {
-    id: String,
-    name: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Card {
-    closed: bool,
-    idList: String,
-    name: String,
 }
