@@ -3,3 +3,5 @@
 **/*.rs.bk
 exported.json
 set_list\.md
+
+set_list\.html

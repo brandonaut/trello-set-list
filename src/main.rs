@@ -1,16 +1,20 @@
 #![allow(non_snake_case)]
+
 extern crate clap;
+extern crate pulldown_cmark;
 
 #[macro_use]
 extern crate serde_derive;
+
 extern crate serde_json;
 extern crate serde;
 
 use clap::{App, Arg};
-
+use pulldown_cmark::{html, Parser};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io;
+use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
 struct TrelloBoard {
@@ -78,25 +82,37 @@ fn main() {
         }
     };
 
-    // Export set list
+    export_set_list(&set_list, output_filename).expect("Failed exporting set list");
+}
+
+fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io::Error> {
+
+    // Construct contents
+    let mut markdown_contents = String::new();
+    markdown_contents.extend("# Bookends Set List:\n\n".chars());
+    for (index, name) in set_list.iter().enumerate() {
+        markdown_contents.extend(format!("  {}. {}\n", index + 1, &name).chars());
+    }
+    
+    // Export Markdown
+    let markdown_path = Path::new(output_filename).with_extension("md");
     {
-        let mut outfile = File::create(output_filename).expect("Couldn't create output file");
-        outfile.write(b"# Bookends Set list:\n").unwrap();
-        for (index, name) in set_list.iter().enumerate() {
-            outfile.write_all(format!("  {}. {}\n", index + 1, &name).as_bytes()).unwrap();
-        }
+        let mut outfile = File::create(&markdown_path)?;
+        outfile.write(markdown_contents.as_bytes())?;
     }
 
-    // Export set list to HTML
-    // match set_list.len() {
-    //     0 => println!("No songs found in the set list"),
-    //     _ => {
-    //         println!("Set list:");
-    //         for (index, song_name) in set_list.iter().enumerate() {
-    //             println!("   {}. {}", index + 1, song_name);
-    //         }
-    //     }
-    // }
+    // Export HTML
+    let parser = Parser::new(&markdown_contents);
+    let mut html_contents = String::new();
+    html::push_html(&mut html_contents, parser);
+
+    let html_path = markdown_path.with_extension("html");
+    {
+        let mut outfile = File::create(html_path)?;
+        outfile.write(html_contents.as_bytes())?;
+    }
+
+    Ok(())
 }
 
 fn get_set_list_from_json(json: &str) -> Result<Vec<String>, io::Error> {
