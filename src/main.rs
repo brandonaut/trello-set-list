@@ -42,25 +42,31 @@ fn main() {
             .help("Output filename")
             .takes_value(true)
        )
+       .arg(Arg::with_name("input")
+            .short("i")
+            .long("in")
+            .help("Trello JSON file to process")
+            .takes_value(true)
+       )
        .get_matches();
 
-    let output_filename: &str = matches.value_of("output").unwrap_or("D:/Git/trello-set-list/set_list.md");
+    let input_json = matches.value_of("input").unwrap_or("exported.json");
+    let output_filename: &str = matches.value_of("output").unwrap_or("set_list.md");
 
     // TODO: Get json from Trello
 
     // Read JSON
-    let json_path = "D:/Git/trello-set-list/exported.json";
-    let mut file = match File::open(json_path) {
+    let mut file = match File::open(input_json) {
         Ok(f) => f,
         Err(e) => {
-            println!("Error opening JSON file: {}", e);
+            println!("Error opening JSON file '{}': {}", input_json, e);
             return;
         }
     };
 
     let mut contents = String::new();
     if let Err(e) = file.read_to_string(&mut contents) {
-        println!("Error reading JSON file: {}", e);
+        println!("Error reading JSON file '{}': {}", input_json, e);
         return;
     }
 
