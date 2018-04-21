@@ -94,7 +94,7 @@ fn get_card_names_on_list(board_data: &TrelloBoard, list_id: &str) -> Result<Vec
     let mut cards_on_list = vec![];
 
     for card in board_data.cards.iter() {
-        if card.idList == list_id {
+        if card.idList == list_id && !card.closed {
             cards_on_list.push(card.name.to_string());
         }
     }
