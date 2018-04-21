@@ -97,8 +97,20 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
     // Construct contents
     let mut markdown_contents = String::new();
     markdown_contents.extend("# Bookends Set List:\n\n".chars());
-    for (index, name) in set_list.iter().enumerate() {
-        markdown_contents.extend(format!("  {}. {}\n", index + 1, &name).chars());
+    for (index, item) in set_list.iter().enumerate() {
+
+        let mut formatted_item = String::new();
+        let items = item.split(" - ").collect::<Vec<&str>>();
+        formatted_item.push_str(&format!("  {}. {}", index + 1, &items[0]));
+
+        // Bold any metadata, such as capo and tuning info
+        if items.len() == 2 {
+            formatted_item.push_str(&format!(" - **{}**", &items[1]));
+        }
+
+        formatted_item.push_str("\n");
+
+        markdown_contents.extend(formatted_item.chars());
     }
     
     // Export Markdown
