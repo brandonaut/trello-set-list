@@ -52,10 +52,17 @@ fn main() {
             .help("Trello JSON file to process")
             .takes_value(true)
        )
+       .arg(Arg::with_name("list_name")
+            .short("l")
+            .long("list")
+            .help("Trello list name")
+            .takes_value(true)
+       )
        .get_matches();
 
     let input_json = matches.value_of("input").unwrap_or("exported.json");
     let output_filename: &str = matches.value_of("output").unwrap_or("set_list.md");
+    let set_list_name = matches.value_of("list_name").unwrap_or("Set List");
 
     // TODO: Get json from Trello
 
@@ -74,7 +81,7 @@ fn main() {
         return;
     }
 
-    let set_list = match get_set_list_from_json(&contents) {
+    let set_list = match get_set_list_from_json(&contents, &set_list_name) {
         Ok(list) => list,
         Err(e) => {
             println!("Error extracting the set list: {}", e);
@@ -115,9 +122,9 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
     Ok(())
 }
 
-fn get_set_list_from_json(json: &str) -> Result<Vec<String>, io::Error> {
+fn get_set_list_from_json(json: &str, set_list_name: &str) -> Result<Vec<String>, io::Error> {
     let data: TrelloBoard = serde_json::from_str(json)?;
-    let set_list_id = get_set_list_id(&data, "Set List")?;
+    let set_list_id = get_set_list_id(&data, set_list_name)?;
 
     let set_list = get_card_names_on_list(&data, &set_list_id)?;
 
@@ -144,5 +151,5 @@ fn get_set_list_id(board: &TrelloBoard, set_list_name: &str) -> Result<String, i
             return Ok(list.id.to_string());
         }
     }
-    Err(io::Error::new(io::ErrorKind::NotFound, "Couldn't find 'lists'"))
+    Err(io::Error::new(io::ErrorKind::NotFound, format!("Couldn't find list named '{}'", set_list_name)))
 }
