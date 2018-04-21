@@ -6,7 +6,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate serde;
 
-use clap::App;
+use clap::{App, Arg};
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -32,11 +32,19 @@ struct Card {
 }
 
 fn main() { 
-    App::new("trello-set-list")
+    let matches = App::new("trello-set-list")
        .version("0.1")
        .about("Creates a printable set list out of a Trello board")
        .author("Brandon H.")
+       .arg(Arg::with_name("output")
+            .short("o")
+            .long("out")
+            .help("Output filename")
+            .takes_value(true)
+       )
        .get_matches();
+
+    let output_filename: &str = matches.value_of("output").unwrap_or("D:/Git/trello-set-list/set_list.md");
 
     // TODO: Get json from Trello
 
@@ -64,9 +72,13 @@ fn main() {
         }
     };
 
-    println!("Set list:");
-    for name in set_list {
-        println!("   {}", name);
+    // Export set list
+    {
+        let mut outfile = File::create(output_filename).expect("Couldn't create output file");
+        outfile.write(b"# Bookends Set list:\n").unwrap();
+        for (index, name) in set_list.iter().enumerate() {
+            outfile.write_all(format!("  {}. {}\n", index + 1, &name).as_bytes()).unwrap();
+        }
     }
 
     // Export set list to HTML

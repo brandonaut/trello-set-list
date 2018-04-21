@@ -2,3 +2,4 @@
 /target/
 **/*.rs.bk
 exported.json
+set_list\.md
