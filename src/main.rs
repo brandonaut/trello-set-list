@@ -90,6 +90,8 @@ fn main() {
     };
 
     export_set_list(&set_list, output_filename).expect("Failed exporting set list");
+    
+    println!("Done");
 }
 
 fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io::Error> {
@@ -119,6 +121,7 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
         let mut outfile = File::create(&markdown_path)?;
         outfile.write(markdown_contents.as_bytes())?;
     }
+    println!("Exported to {}", markdown_path.to_str().unwrap());
 
     // Export HTML
     let parser = Parser::new(&markdown_contents);
@@ -127,9 +130,10 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
 
     let html_path = markdown_path.with_extension("html");
     {
-        let mut outfile = File::create(html_path)?;
+        let mut outfile = File::create(&html_path)?;
         outfile.write(html_contents.as_bytes())?;
     }
+    println!("Exported to {}", html_path.to_str().unwrap());
 
     Ok(())
 }
@@ -156,9 +160,7 @@ fn get_card_names_on_list(board_data: &TrelloBoard, list_id: &str) -> Result<Vec
 }
 
 fn get_set_list_id(board: &TrelloBoard, set_list_name: &str) -> Result<String, io::Error> {
-    println!("Lists:");
     for list in board.lists.iter() {
-        println!("   {}", list.name);
         if list.name == set_list_name {
             return Ok(list.id.to_string());
         }
