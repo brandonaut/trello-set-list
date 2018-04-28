@@ -7,6 +7,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate serde;
 extern crate textwrap;
+extern crate time;
 
 use clap::{App, Arg};
 use pulldown_cmark::{html, Parser};
@@ -97,8 +98,14 @@ fn main() {
 fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io::Error> {
 
     // Construct contents
+    let now = time::now();
     let mut markdown_contents = String::new();
-    markdown_contents.extend("## Bookends Set List:\n\n".chars());
+    markdown_contents.extend("## Bookends Set List\n\n".chars());
+    markdown_contents.extend(
+        format!("_Generated on {}-{}-{}_\n\n", now.tm_year + 1900, now.tm_mon, now.tm_mday)
+        .chars()
+    );
+
     for (index, item) in set_list.iter().enumerate() {
 
         let mut formatted_item = String::new();
@@ -136,6 +143,7 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
             <head>
                 <style>
                 h2   {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+                p    {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
                 li   {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
                 </style>
             </head>
