@@ -98,7 +98,7 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
 
     // Construct contents
     let mut markdown_contents = String::new();
-    markdown_contents.extend("# Bookends Set List:\n\n".chars());
+    markdown_contents.extend("## Bookends Set List:\n\n".chars());
     for (index, item) in set_list.iter().enumerate() {
 
         let mut formatted_item = String::new();
@@ -132,6 +132,16 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
     {
         let mut outfile = File::create(&html_path)?;
         outfile.write(html_contents.as_bytes())?;
+
+        // TODO: find better way to inject CSS
+        outfile.write(r"
+            <head>
+                <style>
+                h2   {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+                li   {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+                </style>
+            </head>
+        ".as_bytes())?;
     }
     println!("Exported to {}", html_path.to_str().unwrap());
 
