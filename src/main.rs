@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+#[macro_use]
 extern crate clap;
 extern crate pulldown_cmark;
 #[macro_use]
@@ -36,10 +37,10 @@ struct Card {
 }
 
 fn main() { 
-    let matches = App::new("trello-set-list")
-       .version("0.1")
+    let matches = App::new(crate_name!())
+       .version(crate_version!())
        .about("Creates a printable set list out of a Trello board")
-       .author("Brandon H.")
+       .author(crate_authors!())
        .arg(Arg::with_name("output")
             .short("o")
             .long("out")
