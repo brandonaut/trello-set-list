@@ -2,12 +2,11 @@
 
 extern crate clap;
 extern crate pulldown_cmark;
-
 #[macro_use]
 extern crate serde_derive;
-
 extern crate serde_json;
 extern crate serde;
+extern crate textwrap;
 
 use clap::{App, Arg};
 use pulldown_cmark::{html, Parser};
@@ -65,6 +64,7 @@ fn main() {
     let set_list_name = matches.value_of("list_name").unwrap_or("Set List");
 
     // TODO: Get json from Trello
+    // let api_key = "063abb545583e20e7ab609ab534854e4";
 
     // Read JSON
     let mut file = match File::open(input_json) {
@@ -131,17 +131,16 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
     let html_path = markdown_path.with_extension("html");
     {
         let mut outfile = File::create(&html_path)?;
-        outfile.write(html_contents.as_bytes())?;
-
         // TODO: find better way to inject CSS
-        outfile.write(r"
+        outfile.write(textwrap::dedent("
             <head>
                 <style>
                 h2   {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
                 li   {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
                 </style>
             </head>
-        ".as_bytes())?;
+        ").as_bytes())?;
+        outfile.write(html_contents.as_bytes())?;
     }
     println!("Exported to {}", html_path.to_str().unwrap());
 
