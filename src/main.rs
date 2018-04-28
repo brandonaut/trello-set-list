@@ -69,24 +69,31 @@ fn main() {
     // let api_key = "063abb545583e20e7ab609ab534854e4";
 
     // Read JSON
-    let mut file = match File::open(input_json) {
+    let json_path = if Path::new(&input_json).exists() {
+        input_json.to_string()
+    } else {
+        get_json_path_from_user().unwrap()
+    };
+
+    println!("Loading Trello data from '{}'", &json_path);
+    let mut file = match File::open(&json_path) {
         Ok(f) => f,
         Err(e) => {
-            println!("Error opening JSON file '{}': {}", input_json, e);
+            eprintln!("Error opening JSON file: {}", e);
             return;
-        }
+        },
     };
 
     let mut contents = String::new();
     if let Err(e) = file.read_to_string(&mut contents) {
-        println!("Error reading JSON file '{}': {}", input_json, e);
+        eprintln!("Error reading JSON file: {}", e);
         return;
     }
 
     let set_list = match get_set_list_from_json(&contents, &set_list_name) {
         Ok(list) => list,
         Err(e) => {
-            println!("Error extracting the set list: {}", e);
+            eprintln!("Error extracting the set list: {}", e);
             return;
         }
     };
@@ -94,6 +101,27 @@ fn main() {
     export_set_list(&set_list, output_filename).expect("Failed exporting set list");
     
     println!("Done");
+}
+
+fn get_json_path_from_user() -> Result<String, String> {
+    let mut got_it = false;
+    let mut path = String::new();
+
+    while !got_it {
+        print!("Path to JSON file (Ctrl+C to quit): ");
+        io::stdout().flush().unwrap();
+        path = String::new();
+        if io::stdin().read_line(&mut path).is_ok() {
+            path = path.trim_right().to_string();
+            if Path::new(&path).exists() {
+                got_it = true;
+            }
+            else { 
+                println!("{} not found", &path);
+            }
+        }
+    }
+    Ok(path)
 }
 
 fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io::Error> {
