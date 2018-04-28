@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 extern crate clap;
+extern crate open;
 extern crate pulldown_cmark;
 #[macro_use]
 extern crate serde_derive;
@@ -150,7 +151,23 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
         ").as_bytes())?;
         outfile.write(html_contents.as_bytes())?;
     }
-    println!("Exported to {}", html_path.to_str().unwrap());
+
+
+    match html_path.to_str() {
+        Some(path) => {
+            println!("Exported to {}", path);
+
+            // Open HTML in in default program
+            match open::that(path) {
+                Ok(_) => {
+                    std::thread::sleep(time::Duration::milliseconds(1000).to_std().unwrap());
+                    println!("Opened {}", path);
+                },
+                Err(e) => println!("Failed to open {}: {}", path, e),
+            }
+        },
+        None => println!("Failed to convert HTML path to string"),
+    }
 
     Ok(())
 }
