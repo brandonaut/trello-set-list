@@ -131,7 +131,7 @@ fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io:
     let mut markdown_contents = String::new();
     markdown_contents.extend("## Bookends Set List\n\n".chars());
     markdown_contents.extend(
-        format!("_Generated on {}-{}-{}_\n\n", now.tm_year + 1900, now.tm_mon, now.tm_mday)
+        format!("_Generated on {}-{:02}-{:02}_\n\n", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday)
         .chars()
     );
 
