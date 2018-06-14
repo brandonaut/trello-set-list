@@ -37,7 +37,7 @@ struct Card {
     name: String,
 }
 
-fn main() { 
+fn main() -> Result<(), io::Error> { 
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .about("Creates a printable set list out of a Trello board")
@@ -85,53 +85,35 @@ fn main() {
     let json_path = if Path::new(&input_json).exists() {
         input_json.to_string()
     } else {
-        get_json_path_from_user().unwrap()
+        get_json_path_from_user()?
     };
 
     println!("Loading Trello data from '{}'", &json_path);
-    let mut file = match File::open(&json_path) {
-        Ok(f) => f,
-        Err(e) => {
-            eprintln!("Error opening JSON file: {}", e);
-            return;
-        },
-    };
+    let mut file = File::open(&json_path)?;
 
     let mut contents = String::new();
-    if let Err(e) = file.read_to_string(&mut contents) {
-        eprintln!("Error reading JSON file: {}", e);
-        return;
-    }
+    file.read_to_string(&mut contents)?;
 
-    let set_list = match get_set_list_from_json(&contents, &set_list_name) {
-        Ok(list) => list,
-        Err(e) => {
-            eprintln!("Error extracting the set list: {}", e);
-            return;
-        }
-    };
+    let set_list = get_set_list_from_json(&contents, &set_list_name)?;
 
     export_set_list(&set_list, output_filename, &title).expect("Failed exporting set list");
     
     println!("Done");
+    Ok(())
 }
 
-fn get_json_path_from_user() -> Result<String, String> {
+fn get_json_path_from_user() -> Result<String, io::Error> {
     let mut got_it = false;
     let mut path = String::new();
 
     while !got_it {
-        print!("Path to JSON file (Ctrl+C to quit): ");
-        io::stdout().flush().unwrap();
-        path = String::new();
-        if io::stdin().read_line(&mut path).is_ok() {
-            path = path.trim_right().to_string();
-            if Path::new(&path).exists() {
-                got_it = true;
-            }
-            else { 
-                println!("{} not found", &path);
-            }
+        path = rprompt::prompt_reply_stdout("Path to JSON file (Ctrl+C to quit): ")?;
+        path = path.trim_right().to_string();
+        if Path::new(&path).exists() {
+            got_it = true;
+        }
+        else {
+            println!("{} not found", &path);
         }
     }
     Ok(path)
