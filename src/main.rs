@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate clap;
 extern crate pulldown_cmark;
+extern crate rprompt;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
@@ -38,32 +39,44 @@ struct Card {
 
 fn main() { 
     let matches = App::new(crate_name!())
-       .version(crate_version!())
-       .about("Creates a printable set list out of a Trello board")
-       .author(crate_authors!())
-       .arg(Arg::with_name("output")
+        .version(crate_version!())
+        .about("Creates a printable set list out of a Trello board")
+        .author(crate_authors!())
+        .arg(Arg::with_name("output")
             .short("o")
             .long("out")
             .help("Output filename")
             .takes_value(true)
-       )
-       .arg(Arg::with_name("input")
+        )
+        .arg(Arg::with_name("input")
             .short("i")
             .long("in")
             .help("Trello JSON file to process")
             .takes_value(true)
-       )
-       .arg(Arg::with_name("list_name")
+        )
+        .arg(Arg::with_name("list_name")
             .short("l")
             .long("list")
             .help("Trello list name")
             .takes_value(true)
-       )
-       .get_matches();
+        )
+        .arg(Arg::with_name("title")
+            .short("t")
+            .long("title")
+            .help("Title of the generated set list")
+            .takes_value(true)
+        )
+        .get_matches();
 
     let input_json = matches.value_of("input").unwrap_or("exported.json");
     let output_filename: &str = matches.value_of("output").unwrap_or("set_list.md");
     let set_list_name = matches.value_of("list_name").unwrap_or("Set List");
+
+    let title = match matches.value_of("title") {
+        Some(title) => String::from(title),
+        None => rprompt::prompt_reply_stdout("Please enter a title: ")
+                .expect("Invalid input")
+    };
 
     // TODO: Get json from Trello
     // let api_key = "063abb545583e20e7ab609ab534854e4";
@@ -98,7 +111,7 @@ fn main() {
         }
     };
 
-    export_set_list(&set_list, output_filename).expect("Failed exporting set list");
+    export_set_list(&set_list, output_filename, &title).expect("Failed exporting set list");
     
     println!("Done");
 }
@@ -124,12 +137,12 @@ fn get_json_path_from_user() -> Result<String, String> {
     Ok(path)
 }
 
-fn export_set_list(set_list: &[String], output_filename: &str) -> Result<(), io::Error> {
+fn export_set_list(set_list: &[String], output_filename: &str, title: &str) -> Result<(), io::Error> {
 
     // Construct contents
     let now = time::now();
     let mut markdown_contents = String::new();
-    markdown_contents.extend("## Bookends Set List\n\n".chars());
+    markdown_contents.extend(format!("## {}\n\n", title).chars());
     markdown_contents.extend(
         format!("_Generated on {}-{:02}-{:02}_\n\n", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday)
         .chars()
